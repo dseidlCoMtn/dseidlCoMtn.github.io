@@ -1,6 +1,6 @@
 # Dara's GIS Portfolio
 
-# This is a test
+## My awesome GIS project
 
 ![Street](StreetNetwork.jpg)
 
