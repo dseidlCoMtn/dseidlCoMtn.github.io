@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>Utah Boat Ramps</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+	<script src="miniMap.js"></script>
+	<link rel='stylesheet' href='https://unpkg.com/leaflet-control-mini-map@0.4.0/dist/minimap.css'>
+
+
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		#map {
+
+		}
+	</style>
+
+	<style>#map { width: 100%; height: 100%; }
+.info { padding: 6px 8px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } .info h4 { margin: 0 0 5px; color: #777; }
+.legend { text-align: left; line-height: 18px; color: #555; } .legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }</style>
+</head>
+<body>
+
+<div id='map'></div>
+
+<script type="text/javascript" src="boatRamps.js"></script>
+<script type="text/javascript" src="utah.js"></script>
+
+<script type="text/javascript">
+
+	var map = L.map('map').setView([37.8, -96], 5);
+
+	
+var Stamen_Watercolor = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}', {
+	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	subdomains: 'abcd',
+	minZoom: 1,
+	maxZoom: 16,
+	ext: 'jpg'
+}).addTo(map);
+
+var osm = new L.TileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {minZoom: 0, maxZoom: 13});
+var miniMap = new L.Control.MiniMap(osm).addTo(map);
+
+
+
+	// control that shows state info on hover
+	var info = L.control();
+
+	info.onAdd = function (map) {
+		this._div = L.DomUtil.create('div', 'info');
+		this.update();
+		return this._div;
+	};
+
+	info.update = function (props) {
+		this._div.innerHTML = '<h4>Utah Boat Ramps</h4>' +  (props ?
+			'<b>' + props.Name + '</b>'
+			: '');
+	};
+
+	info.addTo(map);
+	
+	function getColor(d) {
+		return d == "State" ?  '#00b159' :
+				d == "Federal"  ? '#00aedb' :
+				d == "Private"  ? '#f37735' :
+						   '#74a9cf';
+	}
+
+
+
+	function style(feature) {
+		return {
+			weight: 2,
+			opacity: 1,
+			color: 'white',
+			dashArray: '3',
+			fillOpacity: 0.7,
+			fillColor: getColor(feature.properties.OWNER)
+		};
+	}
+
+	function highlightFeature(e) {
+		var layer = e.target;
+
+		layer.setStyle({
+			weight: 5,
+			color: '#666',
+			dashArray: '',
+			fillOpacity: 0.7
+		});
+
+		if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+			layer.bringToFront();
+		}
+
+		info.update(layer.feature.properties);
+	}
+
+	var geojson;
+
+	function resetHighlight(e) {
+		geojson.resetStyle(e.target);
+		info.update();
+	}
+
+	function zoomToFeature(e) {
+		map.fitBounds(e.target.getBounds());
+	}
+
+	function onEachFeature(feature, layer) {
+		layer.on({
+			mouseover: highlightFeature,
+			mouseout: resetHighlight
+		});
+		layer.bindTooltip(feature.properties.Name+"<br>Owner:"+
+		feature.properties.OWNER);
+	}
+	
+
+
+
+	var stStyle = {
+    color: "#808080",
+    opacity: 1,
+    fillOpacity: 0.2
+};
+
+
+	var utahLayer = L.geoJson(utah, {
+	style: stStyle
+	}).addTo(map);
+	
+	geojson = L.geoJson(ramps, {
+		onEachFeature:onEachFeature,
+		pointToLayer: function(geoJsonPoint, latlng) {
+                        return L.circleMarker(latlng);},
+	style: style
+	}).addTo(map);
+
+	
+	var overlays = {
+    "Boat Ramps": geojson,
+	"Utah": utahLayer
+};
+
+L.control.layers({},overlays).addTo(map);
+L.control.scale().addTo(map);
+	
+map.on('zoom', function(){
+    var z = map.getZoom();
+    if (z > 0 && z < 8) {
+        return utahLayer.addTo(map);
+    }
+    return utahLayer.removeFrom(map);
+});
+	
+
+
+
+</script>
+
+
+
+</body>
+</html>
