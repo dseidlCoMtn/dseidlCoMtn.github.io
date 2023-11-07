@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Manhattan Intersection Collisions, Novermber 2015</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
+
+	<style>
+
+
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        html, body, #map {
+            height: 100%;
+            width: 100%;
+        }
+
+		.info {
+			padding: 6px 6px;
+			font: 25px/20px Trebuchet MS, Arial, sans-serif;
+			background: white;
+			background: rgba(255,255,255,0.8);
+			box-shadow: 0 0 15px rgba(0,0,0,0.2);
+			border-radius: 5px;
+		}
+		.info h4 {
+			margin: 0 0 10px;
+			color: #3333cc;
+		}
+
+		.image {
+			text-align: center;
+			line-height: 26px;
+			width: 100%;
+			font-size: 15px;
+			color: #555;
+		}
+
+		.image i {
+			width: 26px;
+			height: 26px;
+			float: right;
+			opacity: 0.7;
+		}
+
+		.legend {
+			text-align: center;
+			line-height: 19px;
+			width: 25%;
+			font-size: 15px;
+			color: #555;
+		}
+		.legend i {
+			width: 26px;
+			height: 26px;
+			float: left;
+			margin-right: 1px;
+			opacity: 0.7;
+		}
+	</style>
+    </head>
+<body>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.71/jquery.csv-0.71.min.js"></script>
+
+<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+<script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
+<div id="map"</div>
+<script type="text/javascript"charset="utf-8">
+
+//let's read the csv file. if this is finished we call the function to show it on the map.
+
+$(document).ready(function() {
+  $.ajax({
+    type: "GET",
+    url: "Manh_Collisions.csv",
+    dataType: "text",
+    success: function(data){displayData(data)}
+  });
+});
+
+//now the function that is called after the file was loaded
+
+function displayData(Text){
+	data=$.csv.toObjects(Text);
+	var map = L.map('map').setView([40.771766, -73.968758], 13);
+	var CartoDB_Positron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://cartodb.com/attributions">CartoDB</a> &copy; <a href="https://www.nyc.gov/html/nypd/html/traffic_reports/motor_vehicle_collision_data.shtml">NYPD Motor Vehicle Collisions Nov 2015</a>',
+	subdomains: 'abcd',
+	maxZoom: 14
+}).addTo(map);
+
+data_array= [0,0,0]; //create it before filling
+  for (i = 0; i < data.length; i++) {
+	data_array[i] = [data[i].latitude,data[i].longitude,data[i].Magnitude];
+
+};
+
+		var info = L.control();
+
+		info.onAdd = function (map) {
+			this._div = L.DomUtil.create('div', 'info');
+			this.update();
+			return this._div;
+		};
+
+		info.update = function (props) {
+			this._div.innerHTML = '<h4>Heatmap of Motor Vehicle Collisions at Manhattan Intersections</h4>' +
+				'<i>November 2015</i>' ;
+		};
+
+		info.addTo(map);
+
+		var legend = L.control({position: 'bottomright'});
+
+		legend.onAdd = function (map) {
+			this._div = L.DomUtil.create('div', 'info legend');
+			this.update();
+			return this._div;
+		};
+
+		legend.update = function (props) {
+			this._div.innerHTML = 'A heatmap is used to visualize areas with a high density of a given variable. This heatmap is generated on the fly from a CSV file of collision data. In this example, the collision data appear clustered in Midtown, Little Italy, Murray Hill, Chinatown, and Little Italy. There is a high concentration of collisions all along Canal Street, 8th Avenue, and 5th Avenue. The extreme outlier intersections (shown in the box plot with 10 collisions)are: 40th & 11th Ave, Canal & Bowery, 23rd & Park, 57th & 6th, and 57th & 3rd.';
+		};
+
+		legend.addTo(map);
+
+	var heat = L.heatLayer(data_array,{
+          radius: 15,
+          blur: 15,
+		  maxZoom: 17,
+      }).addTo(map);
+};
+</script>
+</body>
+</html>
