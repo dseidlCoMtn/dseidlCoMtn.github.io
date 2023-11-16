@@ -1,0 +1,112 @@
+<html>
+<head>
+  <title>Leaflet Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script
+			  src="https://code.jquery.com/jquery-3.7.1.js"
+			  integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
+			  crossorigin="anonymous"></script>
+  <style>
+    #map{ width: 100%; height: 100% }
+  </style>
+</head>
+<body>
+
+  <div id="map"></div>
+
+  <script>
+
+  // initialize the map
+  var map = L.map('map').setView([39.59, -106.06], 11);
+
+  const apigeo = {
+        type: "FeatureCollection",
+        features: [],
+      };
+
+//       $.get("http://127.0.0.1:3000/?url=https://summitstage.doublemap.com/map/v2/buses", function(response) { 
+//     alert(response) 
+// });
+
+// $.getJSON('http://anyorigin.com/get?url=https://summitstage.doublemap.com/map/v2/buses&callback=?', function(data){
+//     $('#output').html(data.contents);
+//     alert(data);
+// });
+
+$.ajax({
+  type: "GET",
+  url: 'getURL.php',
+  //data:{q:idiom},
+  async:true,
+  //dataType : 'jsonp',   //you may use jsonp for cross origin request
+  crossDomain:true,
+  success: function(data) {
+    alert(data);
+  }
+});
+
+// function jsonCallback(json) {
+//         console.log(json);
+//     }
+
+//     $.getJSON( "https://summitstage.doublemap.com/map/v2/buses", function( data ) {
+//   console.log(data);
+// });
+
+// $.ajax({
+//     url: 'https://summitstage.doublemap.com/map/v2/buses',
+//     dataType: 'jsonp',
+//     headers: {'Access-Control-Allow-Origin':'*', 'Content-Type': 'application/javascript'
+//         },
+//     success: console.log('YAY')
+// }).done(function(data) {
+//    //var json = $.parseJSON(data);
+//    alert(data.find("data"));
+// });
+
+
+//  async function getData() {
+// //   //const busURL = "https://summitstage.doublemap.com/map/v2/buses";
+// //   //const requestOptions = {method: 'GET', headers: {Accept: 'application/json'}};
+// //   //const response = await fetch(busURL, requestOptions);
+// //   //const json = await response.json();
+//    $.ajax({
+//    url: 'getURL.php',
+// //   //optional data might be usefull
+//    type: 'GET',
+//    //dataType: "jsonp", 
+// //   //dataType: 'xml',
+//    //context: document.body,
+//    dataType: "html",
+//    data: {"action": "loadall"},
+// //   data: {
+// //         //me: me
+// //     },
+//  }).done(function(data) {
+//    //var json = $.parseJSON(data);
+//    console.log(data);
+  
+//  }); 
+
+//   for (var i in json){
+//     var lat =json[i].lat;
+//     var lon =json[i].lon;
+//     console.log(lat,lon);
+//   };
+ //};
+
+//getData();
+
+  // load a basemap as a tile layer
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', 
+  {
+	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+	subdomains: 'abcd',
+	maxZoom: 20
+  }).addTo(map);
+
+  </script>
+</body>
+</html>
+	
