@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>Western Slope Boundaries</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+    <link rel="stylesheet" href="css/leaflet_171.css"/>
+    <script src="js/leaflet_171.js"></script>
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		#map { width: 100%; height: 100%; font-family: 'Century Gothic'}
+		.info { padding: 6px 8px; font: 14px/16px Century Gothic, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px;} 
+		.info h4 { margin: 0 0 0px; color: #777; }
+		.legend { text-align: left; line-height: 18px; color: #555; } 
+		.legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
+	</style>
+</head>
+<body>
+
+<div id='map'></div>
+
+	<script type="text/javascript" src="js/coCounties.js"></script>
+	<script type="text/javascript" src="js/catchment.js"></script>
+	<script type="text/javascript" src="js/contDiv.js"></script>
+	<script type="text/javascript" src="js/cdt.js"></script>
+	<script type="text/javascript" src="js/dola_ws.js"></script>
+	<script type="text/javascript" src="js/cong118.js"></script>
+	<script type="text/javascript">
+
+	var map = L.map('map').setView([38.9, -106.3], 7);
+
+	
+	var terrain = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC',
+	maxZoom: 16
+	}).addTo(map);
+	
+	var imagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+	});
+	
+	var voy =  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+	subdomains: 'abcd',
+	maxZoom: 20
+	});
+
+	var info = L.control({position: 'topright'});
+
+	info.onAdd = function (map) {
+		this._div = L.DomUtil.create('div', 'info');
+		this.update();
+		return this._div;
+	};
+
+	info.update = function (props) {
+		this._div.innerHTML = '<h4>Western Slope Boundaries</h4>';
+	};
+
+	info.addTo(map);
+	
+
+
+	function highlightFeature(e) {
+		var layer = e.target;
+
+		layer.setStyle({
+			weight: 2,
+			color: '#666',
+			dashArray: '',
+			fillOpacity: 0.3
+		});
+
+		if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+			layer.bringToFront();
+		}
+
+		info.update(layer.feature.properties);
+	}
+
+	function resetHighlightCounties(e) {
+		cnties.resetStyle(e.target);
+		info.update();
+	}
+
+
+	function onEachFeatureCounty(feature, layer) {
+		layer.on({
+			mouseover: highlightFeature,
+			mouseout: resetHighlightCounties
+		});
+		layer.bindTooltip('<b>'+feature.properties.NAME+'</b>');
+	}
+
+	function styleCounties(feature) {
+		return {
+			weight: 1,
+			opacity: 1,
+			color: 'white',
+			dashArray: '5',
+			fillOpacity: 0,
+		};
+	}
+
+	var cnties = L.geoJson(counties, {
+						onEachFeature: onEachFeatureCounty,
+						style:styleCounties
+	}).addTo(map);
+
+	
+	function styleWshed(feature) {
+		return {
+			weight: 2,
+			opacity: 1,
+			color: 'blue',
+			dashArray: '',
+			fillOpacity: 0,
+		};
+	}
+
+	var wshed = L.geoJson(catch14, {
+						style:styleWshed,
+						interactive: false 
+	}).addTo(map);
+
+	function stylecontDivLine(feature) {
+		return {
+			weight: 3,
+			opacity: 1,
+			color: 'black',
+			dashArray: '',
+			fillOpacity: 0,
+		};
+	}
+
+	var contDivLine = L.geoJson(contDiv, {
+						style:stylecontDivLine,
+						interactive: false 
+	});
+
+	function styleCDTLine(feature) {
+		return {
+			weight: 3,
+			opacity: 1,
+			color: 'brown',
+			dashArray: '6',
+			fillOpacity: 0,
+		};
+	}
+
+	var cdtLine = L.geoJson(cdt, {
+						style:styleCDTLine,
+						interactive: false 
+	});
+
+	function styleDemog(feature) {
+		return {
+			weight: 3,
+			opacity: 1,
+			color: '#5D3FD3',
+			dashArray: '',
+			fillOpacity: 0,
+		};
+	}
+
+	var demog = L.geoJson(dola, {
+						style:styleDemog,
+						interactive: false 
+	});
+
+	function styleCong(feature) {
+		return {
+			weight: 3,
+			opacity: 1,
+			color: '#1c7a6a',
+			dashArray: '',
+			fillOpacity: 0,
+		};
+	}
+
+	var cong18 = L.geoJson(cong, {
+						style:styleCong,
+						interactive: false 
+	});
+
+
+
+
+
+		
+	var baseLayers = {
+    "Terrain": terrain,
+	"Imagery": imagery,
+	"Navigation": voy
+	
+	};
+
+	var overlays = {
+		"Counties": cnties,
+		"Watershed Area":wshed,
+		"Continental Divide Line": contDivLine,
+		"Continental Divide Scenic Trail": cdtLine,
+		"CO Demography Office Boundary for Western Slope": demog,
+		"Colorado Congressional District 18": cong18
+
+	};
+
+	L.control.layers(baseLayers, overlays, {collapsed: false}).addTo(map);
+	
+	L.control.scale().addTo(map);
+	
+
+</script>
+
+
+
+</body>
+</html>
