@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>Summit Stage Bus Tracker</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <link rel="icon" href="data:;base64,="/>
+  <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.js"></script>
+  <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        html, body, #map {
+            height: 100%;
+            width: 100%;
+        }
+  </style>
+</head>
+<body>
+
+  <div id="map"></div>
+
+  <script type="text/javascript">
+
+  var map = L.map('map').setView([39.59, -106.06], 11);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', 
+  {
+	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+	subdomains: 'abcd',
+	maxZoom: 20
+  }).addTo(map);
+
+  function getColor(d) {
+		if (d == 721){
+			return '#ffff00'
+			}
+    else if (d == 714){
+			return '#c3d600'
+			}
+    else if (d == 712){
+			return '#ffe800'
+			}
+    else if (d == 692){
+			return '#00a5a8'
+			}
+    else if (d == 722){
+			return '#ffe800'
+			}
+    else if (d == 730){
+			return '#f18917'
+			}
+    else if (d == 707){
+			return '#662890'
+			}
+    else if (d == 723){
+			return '#37b1e5'
+			}
+    else if (d == 710){
+			return '#ffe800'
+			}
+    else if (d == 720){
+			return '#ffe800'
+			}
+    else if (d == 708){
+			return '#0079c1'
+			}
+    else {
+			return '#000000'
+			}
+	};
+
+  function style(feature) {
+		return {
+			radius: 8,
+			weight: 1,
+			opacity: 1,
+			color: 'white',
+			fillOpacity: 0.8,
+			fillColor: getColor(feature.properties.route)
+		};
+	}
+
+  function onEachFeature(feature, layer) {
+		layer.bindTooltip("<strong>" + feature.properties.route +"</strong>" +
+			"<br>Heading: " + feature.properties.heading+
+      "<br>Last Stop: " + feature.properties.lastStop+
+      "<br>Last Update: " + feature.properties.lastUpdate
+    );
+  }
+
+  var buses;
+
+async function getData() {
+  const response = await fetch('https://corsproxy.io/?'+ encodeURIComponent('https://summitstage.doublemap.com/map/v2/buses'));
+  const json = await response.json();
+  console.log(json);
+  var geojson = {
+        type: "FeatureCollection",
+        features: [],
+      };
+  for (var i in json){
+    var lat =json[i].lat;
+    var lon =json[i].lon;
+    var heading=json[i].heading;
+    var route=json[i].route;
+    var lastStop=json[i].lastStop;
+    var lastUpdate=json[i].lastUpdate;
+    geojson.features.push({
+				"type": "Feature",
+				"geometry": {
+				"type": "Point",
+				"coordinates": [lon,lat]
+				},
+				"properties": {
+					"heading": heading,
+					"route":route,
+          "lastStop":lastStop,
+          "lastUpdate":lastUpdate,
+				}
+				});
+    };
+    //console.log(geojson);
+     if (map.hasLayer(buses)){
+     map.removeLayer(buses);
+     }
+    
+    buses = L.geoJson(geojson, {
+			pointToLayer: function(geoJsonPoint, latlng) {
+                        return L.circleMarker(latlng);},
+						onEachFeature: onEachFeature,
+						style:style
+			}).addTo(map);
+  };
+
+getData();
+setInterval(getData, 5000);
+  </script>
+</body>
+</html>
+	
